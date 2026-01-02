@@ -103,7 +103,7 @@ void multithreading::forEachSphere(
         return;
 
     dispatch(grid, [&](int colBegin, int colEnd) {
-        process(grid, colBegin, colEnd, task);   // version “Sphere”
+        process(grid, colBegin, colEnd, task);  
     });
 }
 
@@ -115,7 +115,7 @@ void multithreading::forEachCell(
         return;
 
     dispatch(grid, [&](int colBegin, int colEnd) {
-        process(grid, colBegin, colEnd, task);   // version “cell”
+        process(grid, colBegin, colEnd, task);
     });
 }
 
