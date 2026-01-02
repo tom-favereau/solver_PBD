@@ -8,30 +8,27 @@
 #include <functional>
 #include <QVector>
 #include <QtConcurrent/QtConcurrentMap>
+#include <QtConcurrent/QtConcurrentRun>
 #include <QThreadPool>
 
 #include "physicalbody.h"
+#include "grid.h"
 
 
-class multithreading
+namespace multithreading
 {
-public:
-
-
     /**
      * for each sphere apply a procedure
      * @param grid reference on grid
      * @param task procdure applied
      * @param multithreaded is multithreading active or not
      */
-    static void forEachSphere(QVector<QVector<Sphere>> &grid,
-                              const std::function<void (Sphere &)> &task,
-                              bool multithreaded = true);
+    void forEachSphere(Grid &grid, const std::function<void (Sphere &)> &task);
 
     /**
      * Return the number of thread needed
      */
-    static int idealThreadCount();
+    int maxThreadAllowed();
 };
 
 

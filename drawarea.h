@@ -7,16 +7,19 @@
 #include <QElapsedTimer>
 #include <memory>
 #include <QKeyEvent>
+#include <QThreadPool>
 
 #include "physicalbody.h"
 #include "constraints.h"
 #include "multithreading.h"
+#include "grid.h"
 
 class DrawArea : public QWidget
 {
 Q_OBJECT // I don't realy know what it does but don't touch
 public:
-    explicit DrawArea(QWidget *parent = nullptr);
+    //explicit DrawArea(QWidget *parent = nullptr);
+    explicit DrawArea(QWidget *parent = nullptr, unsigned int hearts=0);
 
 protected:
     /**
@@ -149,7 +152,7 @@ private:
     };
 
     Sphere *findSphereNode(int groupId, int nodeIndex);
-    const Sphere *findSphereNode(int groupId, int nodeIndex) const;
+    [[nodiscard]] const Sphere *findSphereNode(int groupId, int nodeIndex) const;
 
     void satisfySpringConstraints();
     void createSpringCluster(const QPointF &center);
@@ -158,7 +161,11 @@ private:
     int nextGroupId = 0;
     //------------------------------------------
 
-    QVector<QVector<Sphere>> grid;
+
+
+
+    Grid grid;
+
     QVector<std::shared_ptr<StaticConstraint>> staticConstraints;
 
     int gridCols = 1;

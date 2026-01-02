@@ -25,7 +25,7 @@ set(PROJECT_SOURCES
         physicalbody.h
         multithreading.cpp
         multithreading.h
-        )
+        grid.h)
 
 if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     qt_add_executable(TD9

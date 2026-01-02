@@ -38,11 +38,15 @@ namespace {
 
 }
 
-DrawArea::DrawArea(QWidget *parent)
+DrawArea::DrawArea(QWidget *parent, unsigned int hearts)
         : QWidget(parent)
 {
     setFocusPolicy(Qt::StrongFocus); //to use with key binding
     setStyleSheet("background: white;");
+
+    if (hearts != 0){
+        QThreadPool::globalInstance()->setMaxThreadCount(hearts); // this set the number of hearts allowed
+    }
 
     QSize initialSize = size();
     if (initialSize.isEmpty()) {
@@ -126,7 +130,7 @@ void DrawArea::paintEvent(QPaintEvent *)
     QPainter painter(this);
     //painter.setRenderHint(QPainter::Antialiasing, true);
 
-    for (const QVector<Sphere> &cell : grid) {
+    for (const QVector<Sphere> &cell : grid.cells) {
         for (const Sphere &sphere : cell) {
             QPen pen(sphere.color, 3);
             painter.setPen(pen);
@@ -203,14 +207,14 @@ void DrawArea::initializeGrid(const QSize &initialSize)
     int widthPx = std::max(1, initialSize.width());
     int heightPx = std::max(1, initialSize.height());
 
-    gridCols = std::max(1, static_cast<int>(std::ceil(static_cast<float>(widthPx) / targetCellSize)));
-    gridRows = std::max(1, static_cast<int>(std::ceil(static_cast<float>(heightPx) / targetCellSize)));
+    grid.gridCols = std::max(1, static_cast<int>(std::ceil(static_cast<float>(widthPx) / targetCellSize)));
+    grid.gridRows = std::max(1, static_cast<int>(std::ceil(static_cast<float>(heightPx) / targetCellSize)));
 
     cellWidth = static_cast<float>(widthPx) / static_cast<float>(gridCols);
     cellHeight = static_cast<float>(heightPx) / static_cast<float>(gridRows);
 
-    grid.clear();
-    grid.resize(gridCols * gridRows);
+    grid.cells.clear();
+    grid.cells.resize(gridCols * gridRows);
 }
 
 void DrawArea::rebuildGrid(const QSize &newSize)
@@ -218,13 +222,13 @@ void DrawArea::rebuildGrid(const QSize &newSize)
     QVector<Sphere> bodies;
     bodies.reserve([&]() {
         int count = 0;
-        for (const QVector<Sphere> &cell : grid) {
+        for (const QVector<Sphere> &cell : grid.cells) {
             count += cell.size();
         }
         return count;
     }());
 
-    for (const QVector<Sphere> &cell : grid) {
+    for (const QVector<Sphere> &cell : grid.cells) {
         for (const Sphere &sphere : cell) {
             bodies.append(sphere);
         }
@@ -266,7 +270,7 @@ void DrawArea::insertSphere(const Sphere &sphere)
 
     int index = cellIndexFor(sphere.position);
     index = clampIndex(index, grid.size());
-    grid[index].append(sphere);
+    grid.cells[index].append(sphere);
 }
 
 void DrawArea::rehashGrid()
@@ -276,7 +280,7 @@ void DrawArea::rehashGrid()
 
     QVector<QVector<Sphere>> newGrid(grid.size());
 
-    for (const auto &cell : grid) {
+    for (const auto &cell : grid.cells) {
         for (const Sphere &sphere : cell) {
             int idx = cellIndexFor(sphere.position);
             idx = clampIndex(idx, newGrid.size());
@@ -284,7 +288,7 @@ void DrawArea::rehashGrid()
         }
     }
 
-    grid.swap(newGrid);
+    grid.cells.swap(newGrid);
 }
 
 int DrawArea::cellIndexFor(const QPointF &position) const
@@ -331,7 +335,7 @@ void DrawArea::integrateBodies(float dt)
         sphere.velocity += kGravity * dt;
         sphere.prevPosition = sphere.position;
         sphere.position += QPointF(sphere.velocity.x() * dt, sphere.velocity.y() * dt);
-    }, true);
+    });
 }
 
 void DrawArea::satisfyStaticConstraints()
@@ -342,7 +346,7 @@ void DrawArea::satisfyStaticConstraints()
 
         multithreading::forEachSphere(grid, [&constraint](Sphere &sphere) { // capture constraint with ref
             constraint->project(sphere);
-        }, true);
+        });
     }
 }
 
@@ -361,7 +365,7 @@ void DrawArea::solveSphereContacts()
     for (int row = 0; row < gridRows; ++row) {
         for (int col = 0; col < gridCols; ++col) {
             int index = row * gridCols + col;
-            auto &cell = grid[index];
+            auto &cell = grid.cells[index];
 
             // intra cells colision
             for (int i = 0; i < cell.size(); ++i) {
@@ -377,7 +381,7 @@ void DrawArea::solveSphereContacts()
                 if (!isValidCell(neighborCol, neighborRow))
                     continue;
 
-                auto &neighborCell = grid[neighborRow * gridCols + neighborCol];
+                auto &neighborCell = grid.cells[neighborRow * gridCols + neighborCol];
                 for (Sphere &a : cell) {
                     for (Sphere &b : neighborCell) {
                         resolveSpherePair(a, b);
@@ -425,14 +429,14 @@ void DrawArea::updateVelocities(float dt)
     multithreading::forEachSphere(grid, [dt](Sphere &sphere) { // capture dt with copy
         QVector2D delta = QVector2D(sphere.position - sphere.prevPosition);
         sphere.velocity = delta / dt;
-    }, true);
+    });
 }
 
 void DrawArea::applyVelocityDamping(float Dampingfactor)
 {
     multithreading::forEachSphere(grid, [Dampingfactor](Sphere &sphere) { // capture Damping factor with copy
         sphere.velocity *= Dampingfactor;
-    }, true);
+    });
 }
 
 bool DrawArea::isCenterCellEmpty() const
@@ -442,7 +446,7 @@ bool DrawArea::isCenterCellEmpty() const
 
     QPointF center(width() * 0.5f, height() * 0.5f);
     int idx = clampIndex(cellIndexFor(center), grid.size());
-    return grid[idx].isEmpty();
+    return grid.cells[idx].isEmpty();
 }
 
 
@@ -528,7 +532,7 @@ void DrawArea::createSpringCluster(const QPointF &center)
 
 Sphere *DrawArea::findSphereNode(int groupId, int nodeIndex)
 {
-    for (QVector<Sphere> &cell : grid) {
+    for (QVector<Sphere> &cell : grid.cells) {
         for (Sphere &sphere : cell) {
             if (sphere.groupId == groupId && sphere.nodeIndex == nodeIndex) {
                 return &sphere;
@@ -540,7 +544,7 @@ Sphere *DrawArea::findSphereNode(int groupId, int nodeIndex)
 
 const Sphere *DrawArea::findSphereNode(int groupId, int nodeIndex) const
 {
-    for (const QVector<Sphere> &cell : grid) {
+    for (const QVector<Sphere> &cell : grid.cells) {
         for (const Sphere &sphere : cell) {
             if (sphere.groupId == groupId && sphere.nodeIndex == nodeIndex) {
                 return &sphere;
