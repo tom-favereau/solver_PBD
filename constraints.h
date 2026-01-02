@@ -32,8 +32,6 @@ public:
 
     PlaneConstraint(const QVector2D &normal, float distance);
 
-    //void set(const QVector2D &normal, float distance);
-
     /**
      * Compute the signed distance between the sphere and the plane and correct accordingly
      * @param sphere

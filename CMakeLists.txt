@@ -69,6 +69,5 @@ install(TARGETS TD9
         )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    # Doc qt_add_executable : MANUAL_FINALIZATION => appel explicite requis
     qt_finalize_executable(TD9)
 endif()

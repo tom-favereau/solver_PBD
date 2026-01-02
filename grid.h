@@ -25,9 +25,25 @@ public:
 
     ~Grid() = default;
 
+
+    void resize(unsigned int rows, unsigned int cols) {
+        gridRows = rows;
+        gridCols = cols;
+        const int total = static_cast<int>(rows * cols);
+
+        cells.resize(total);
+        locks.resize(total);
+        for (int i = 0; i < total; ++i) {
+            if (!locks[i])
+                locks[i].reset(new QMutex);
+        }
+    }
+
+
     [[nodiscard]] int size()  const { return cells.size(); }
 
     QVector<QVector<Sphere>> cells;
+    std::vector<std::unique_ptr<QMutex>> locks; // we don't use QVector because it does not support Qmutex to have copy constructor deleted
     unsigned int gridRows;
     unsigned int gridCols;
     //const float targetCellSize = 200;

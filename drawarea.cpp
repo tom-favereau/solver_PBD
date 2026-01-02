@@ -207,14 +207,14 @@ void DrawArea::initializeGrid(const QSize &initialSize)
     int widthPx = std::max(1, initialSize.width());
     int heightPx = std::max(1, initialSize.height());
 
-    grid.gridCols = std::max(1, static_cast<int>(std::ceil(static_cast<float>(widthPx) / targetCellSize)));
-    grid.gridRows = std::max(1, static_cast<int>(std::ceil(static_cast<float>(heightPx) / targetCellSize)));
+    gridCols = std::max(1, static_cast<int>(std::ceil(static_cast<float>(widthPx) / targetCellSize)));
+    gridRows = std::max(1, static_cast<int>(std::ceil(static_cast<float>(heightPx) / targetCellSize)));
 
     cellWidth = static_cast<float>(widthPx) / static_cast<float>(gridCols);
     cellHeight = static_cast<float>(heightPx) / static_cast<float>(gridRows);
 
     grid.cells.clear();
-    grid.cells.resize(gridCols * gridRows);
+    grid.resize(gridRows, gridCols);
 }
 
 void DrawArea::rebuildGrid(const QSize &newSize)
@@ -349,7 +349,7 @@ void DrawArea::satisfyStaticConstraints()
         });
     }
 }
-
+/*
 void DrawArea::solveSphereContacts()
 {
     if (gridCols <= 0 || gridRows <= 0)
@@ -391,6 +391,78 @@ void DrawArea::solveSphereContacts()
         }
     }
 }
+*/
+
+void DrawArea::solveSphereContacts()
+{
+    if (gridCols <= 0 || gridRows <= 0 || grid.cells.isEmpty())
+        return;
+
+    static const QPoint neighborOffsets[] = {
+            QPoint(1, 0),   // right
+            QPoint(0, 1),   // up
+            QPoint(1, 1),   // up right
+            QPoint(-1, 1)   // up left
+    };
+
+    auto cellJob = [this](unsigned int row, unsigned int col)
+    {
+        const int index = static_cast<int>(row * gridCols + col);
+        if (index < 0 || index >= grid.cells.size())
+            return;
+
+        {
+            QMutexLocker locker(grid.locks[index].get());
+            auto &cell = grid.cells[index];
+            for (int i = 0; i < cell.size(); ++i) {
+                for (int j = i + 1; j < cell.size(); ++j) {
+                    resolveSpherePair(cell[i], cell[j]);
+                }
+            }
+        }
+
+        auto &cell = grid.cells[index];
+
+        for (const QPoint &offset : neighborOffsets) {
+            const int neighborCol = static_cast<int>(col) + offset.x();
+            const int neighborRow = static_cast<int>(row) + offset.y();
+            if (!isValidCell(neighborCol, neighborRow))
+                continue;
+
+            const int neighborIndex = neighborRow * gridCols + neighborCol;
+            if (neighborIndex < 0 || neighborIndex >= grid.cells.size())
+                continue;
+
+            const int firstIndex  = std::min(index, neighborIndex);
+            const int secondIndex = std::max(index, neighborIndex);
+
+            QMutex *firstMutex  = grid.locks[firstIndex].get();
+            QMutex *secondMutex = grid.locks[secondIndex].get();
+            if (!firstMutex || !secondMutex)
+                continue;
+
+            auto processPairs = [&]() {
+                auto &neighbor = grid.cells[neighborIndex];
+                for (Sphere &a : cell) {
+                    for (Sphere &b : neighbor) {
+                        resolveSpherePair(a, b);
+                    }
+                }
+            };
+
+            QMutexLocker firstLocker(firstMutex);
+            if (secondMutex != firstMutex) {
+                QMutexLocker secondLocker(secondMutex);
+                processPairs();
+            } else {
+                processPairs();
+            }
+        }
+    };
+
+    multithreading::forEachCell(grid, cellJob);
+}
+
 
 void DrawArea::resolveSpherePair(Sphere &a, Sphere &b)
 {

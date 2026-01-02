@@ -25,6 +25,8 @@ namespace multithreading
      */
     void forEachSphere(Grid &grid, const std::function<void (Sphere &)> &task);
 
+    void forEachCell(Grid &grid, const std::function<void (unsigned int, unsigned int)> &task);
+
     /**
      * Return the number of thread needed
      */
