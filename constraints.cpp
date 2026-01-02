@@ -19,7 +19,7 @@ void PlaneConstraint::project(Sphere &sphere) const
         return;
 
     QVector2D center = QVector2D(sphere.position);
-    float signedDistance = QVector2D::dotProduct(m_normal, center) - m_distance - sphere.radius;
+    float signedDistance = QVector2D::dotProduct(m_normal, center) - m_distance - sphere.radius; // compute this distance between the plane and the frontier of the sphere
 
     if (signedDistance < 0.f) {
         QVector2D correction = -signedDistance * m_normal;
@@ -27,11 +27,8 @@ void PlaneConstraint::project(Sphere &sphere) const
     }
 }
 
-void SphereConstraint::set(const QPointF &center, float radius)
-{
-    m_center = center;
-    m_radius = qMax(0.f, radius);
-}
+SphereConstraint::SphereConstraint(const QPointF &center, float radius) :
+    m_center(center), m_radius(qMax(0.f, radius)){}
 
 void SphereConstraint::project(Sphere &sphere) const
 {
@@ -45,7 +42,7 @@ void SphereConstraint::project(Sphere &sphere) const
     if (dist >= minDist)
         return;
 
-    if (dist < 1e-5f) {
+    if (dist < 1e-5f) { // if the two are superposed we send the sphere in random direction with distance one
         delta = QVector2D(1.f, 0.f);
         dist = 1.f;
     }
@@ -57,11 +54,7 @@ void SphereConstraint::project(Sphere &sphere) const
     sphere.position += QPointF(correction.x(), correction.y());
 }
 
-void BowlConstraint::set(const QPointF &center, float radius)
-{
-    m_center = center;
-    m_radius = qMax(0.f, radius);
-}
+BowlConstraint::BowlConstraint(const QPointF &center, float radius) : m_center(center), m_radius(qMax(0.f, radius)) {}
 
 void BowlConstraint::project(Sphere &sphere) const
 {

@@ -13,6 +13,11 @@ class StaticConstraint
 {
 public:
     virtual ~StaticConstraint() = default;
+
+    /**
+     * Resolve a colision with a sphere
+     * @param sphere
+     */
     virtual void project(Sphere &sphere) const = 0;
 };
 
@@ -28,6 +33,11 @@ public:
     PlaneConstraint(const QVector2D &normal, float distance);
 
     //void set(const QVector2D &normal, float distance);
+
+    /**
+     * Compute the signed distance between the sphere and the plane and correct accordingly
+     * @param sphere
+     */
     void project(Sphere &sphere) const override;
 
 private:
@@ -35,21 +45,25 @@ private:
     float m_distance = 0.f;
 };
 
+
+/**
+ * A sphere constraint is define with a center and a radius. It is handle the same way as sphere colision.
+ */
 class SphereConstraint : public StaticConstraint
 {
 public:
     SphereConstraint() = default;
 
-    SphereConstraint(const QPointF &center, float radius)
-    {
-        set(center, radius);
-    }
+    SphereConstraint(const QPointF &center, float radius);
 
-    void set(const QPointF &center, float radius);
+    /**
+     * compute the penetration and resolve acordingly
+     * @param sphere
+     */
     void project(Sphere &sphere) const override;
 
-    const QPointF &center() const { return m_center; }
-    float radius() const { return m_radius; }
+    [[nodiscard]] const QPointF &center() const { return m_center; }
+    [[nodiscard]] float radius() const { return m_radius; }
 
 private:
     QPointF m_center = QPointF(0.0, 0.0);
@@ -61,16 +75,16 @@ class BowlConstraint : public StaticConstraint
 public:
     BowlConstraint() = default;
 
-    BowlConstraint(const QPointF &center, float radius)
-    {
-        set(center, radius);
-    }
+    BowlConstraint(const QPointF &center, float radius);
 
-    void set(const QPointF &center, float radius);
+    /**
+     * Compute the penetration and resolve acrodingly
+     * @param sphere
+     */
     void project(Sphere &sphere) const override;
 
-    const QPointF &center() const { return m_center; }
-    float radius() const { return m_radius; }
+    [[nodiscard]] const QPointF &center() const { return m_center; }
+    [[nodiscard]] float radius() const { return m_radius; }
 
 private:
     QPointF m_center = QPointF(0.0, 0.0);

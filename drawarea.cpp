@@ -82,15 +82,28 @@ void DrawArea::mousePressEvent(QMouseEvent *event)
 
 void DrawArea::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_E && !event->isAutoRepeat()) {
+    if (event->isAutoRepeat()) {
+        QWidget::keyPressEvent(event);
+        return;
+    }
+
+    if (event->key() == Qt::Key_E) {
         if (!isEmitting) {
             isEmitting = true;
-            emitCenterSphere();      // émet tout de suite si possible
+            emitCenterSphere();
             emissionTimer.start();
         }
         event->accept();
         return;
     }
+
+    if (event->key() == Qt::Key_C) {
+        QPointF center(width() * 0.5f, height() * 0.5f);
+        createSpringCluster(center);
+        event->accept();
+        return;
+    }
+
     QWidget::keyPressEvent(event);
 }
 
@@ -102,7 +115,7 @@ void DrawArea::keyReleaseEvent(QKeyEvent *event)
         //    emissionTimer.stop();
         //    isEmitting = false;
         //}
-        event->accept();
+        //event->accept();
         return;
     }
     QWidget::keyReleaseEvent(event);
@@ -161,7 +174,7 @@ void DrawArea::animate()
     constexpr int subSteps = 4;
     constexpr int solverIterations = 4;
     constexpr float damping = 1.0f; //0.998f;
-
+    //constexpr float damping = 0.998f;
 
     float dt = frameDt / subSteps;
 
@@ -171,6 +184,8 @@ void DrawArea::animate()
 
         for (int iter = 0; iter < solverIterations; ++iter) {
             satisfyStaticConstraints();
+            rehashGrid();
+            satisfySpringConstraints();
             rehashGrid();
             solveSphereContacts();
             rehashGrid();
@@ -234,13 +249,14 @@ void DrawArea::rebuildBoundaryConstraints()
     staticConstraints.append(std::make_shared<PlaneConstraint>(QVector2D(0.f, 1.f), 0.f));          // haut
     staticConstraints.append(std::make_shared<PlaneConstraint>(QVector2D(0.f, -1.f), -h));          // bas
 
-    //QPointF pillarCenter(w * 0.25f, h * 0.35f);
-    //float pillarRadius = std::min(w, h) * 0.1f;
-    //staticConstraints.append(std::make_shared<SphereConstraint>(pillarCenter, pillarRadius));
 
-    QPointF bowlCenter(w * 0.5f, h * 0.3f);
-    float bowlRadius = std::max(w, h) * 0.5f;
-    staticConstraints.append(std::make_shared<BowlConstraint>(bowlCenter, bowlRadius));
+    //staticConstraints.append(std::make_shared<SphereConstraint>(QPointF(w * 0.5f, h * 0.8f), std::min(w, h) * 0.1f));
+
+    //staticConstraints.append(std::make_shared<SphereConstraint>(QPointF(w * 0.3f, h * 0.6f), std::min(w, h) * 0.1f));
+
+    //staticConstraints.append(std::make_shared<SphereConstraint>(QPointF(w * 0.7f, h * 0.6f), std::min(w, h) * 0.1f));
+
+    //staticConstraints.append(std::make_shared<BowlConstraint>(QPointF(w * 0.5f, h * 0.3f), std::max(w, h) * 0.5f));
 }
 
 void DrawArea::insertSphere(const Sphere &sphere)
@@ -308,14 +324,14 @@ bool DrawArea::isValidCell(int col, int row) const
 
 void DrawArea::integrateBodies(float dt)
 {
-    forEachSphere([dt](Sphere &sphere) {
+    multithreading::forEachSphere(grid, [dt](Sphere &sphere) { //[dt] = capture the variable dt in the scope of the function
         if (sphere.invMass <= 0.f)
             return;
 
         sphere.velocity += kGravity * dt;
         sphere.prevPosition = sphere.position;
         sphere.position += QPointF(sphere.velocity.x() * dt, sphere.velocity.y() * dt);
-    });
+    }, true);
 }
 
 void DrawArea::satisfyStaticConstraints()
@@ -324,9 +340,9 @@ void DrawArea::satisfyStaticConstraints()
         if (!constraint)
             continue;
 
-        forEachSphere([&](Sphere &sphere) {
+        multithreading::forEachSphere(grid, [&constraint](Sphere &sphere) { // capture constraint with ref
             constraint->project(sphere);
-        });
+        }, true);
     }
 }
 
@@ -335,11 +351,11 @@ void DrawArea::solveSphereContacts()
     if (gridCols <= 0 || gridRows <= 0)
         return;
 
-    static const QPoint neighborOffsets[] = {
-            QPoint(1, 0),
-            QPoint(0, 1),
-            QPoint(1, 1),
-            QPoint(-1, 1)
+    static const QPoint neighborOffsets[] = { // don't need to test all the neighbor Cell because somme will be teste by other cell
+            QPoint(1, 0), // right
+            QPoint(0, 1), // up
+            QPoint(1, 1), // up right
+            QPoint(-1, 1) // up left
     };
 
     for (int row = 0; row < gridRows; ++row) {
@@ -347,12 +363,14 @@ void DrawArea::solveSphereContacts()
             int index = row * gridCols + col;
             auto &cell = grid[index];
 
+            // intra cells colision
             for (int i = 0; i < cell.size(); ++i) {
                 for (int j = i + 1; j < cell.size(); ++j) {
                     resolveSpherePair(cell[i], cell[j]);
                 }
             }
 
+            // inter cell colision
             for (const QPoint &offset : neighborOffsets) {
                 int neighborCol = col + offset.x();
                 int neighborRow = row + offset.y();
@@ -370,14 +388,14 @@ void DrawArea::solveSphereContacts()
     }
 }
 
-bool DrawArea::resolveSpherePair(Sphere &a, Sphere &b)
+void DrawArea::resolveSpherePair(Sphere &a, Sphere &b)
 {
     QVector2D delta = QVector2D(b.position - a.position);
     float dist = delta.length();
     float minDist = a.radius + b.radius;
 
     if (dist >= minDist)
-        return false;
+        return;
 
     if (dist < 1e-6f) {
         delta = QVector2D(1.f, 0.f);
@@ -386,7 +404,7 @@ bool DrawArea::resolveSpherePair(Sphere &a, Sphere &b)
 
     float totalInvMass = a.invMass + b.invMass;
     if (totalInvMass <= 0.f)
-        return false;
+        return;
 
     float penetration = minDist - dist;
     QVector2D normal = delta / dist;
@@ -397,8 +415,6 @@ bool DrawArea::resolveSpherePair(Sphere &a, Sphere &b)
 
     a.position -= QPointF(correction.x() * shareA, correction.y() * shareA);
     b.position += QPointF(correction.x() * shareB, correction.y() * shareB);
-
-    return true;
 }
 
 void DrawArea::updateVelocities(float dt)
@@ -406,17 +422,17 @@ void DrawArea::updateVelocities(float dt)
     if (dt <= 0.f)
         return;
 
-    forEachSphere([dt](Sphere &sphere) {
+    multithreading::forEachSphere(grid, [dt](Sphere &sphere) { // capture dt with copy
         QVector2D delta = QVector2D(sphere.position - sphere.prevPosition);
         sphere.velocity = delta / dt;
-    });
+    }, true);
 }
 
-void DrawArea::applyVelocityDamping(float factor)
+void DrawArea::applyVelocityDamping(float Dampingfactor)
 {
-    forEachSphere([factor](Sphere &sphere) {
-        sphere.velocity *= factor;
-    });
+    multithreading::forEachSphere(grid, [Dampingfactor](Sphere &sphere) { // capture Damping factor with copy
+        sphere.velocity *= Dampingfactor;
+    }, true);
 }
 
 bool DrawArea::isCenterCellEmpty() const
@@ -428,6 +444,8 @@ bool DrawArea::isCenterCellEmpty() const
     int idx = clampIndex(cellIndexFor(center), grid.size());
     return grid[idx].isEmpty();
 }
+
+
 
 void DrawArea::emitCenterSphere()
 {
@@ -454,4 +472,108 @@ void DrawArea::emitCenterSphere()
 
     insertSphere(sphere);
     update();
+}
+
+void DrawArea::createSpringCluster(const QPointF &center)
+{
+    const float radius = 18.f;
+    const float halfSpacing = 26.f;
+    const float mass = 6.f;
+    const QColor color(220, 80, 80);
+
+    const int clusterId = nextGroupId++;
+
+    struct NodeSpec { QPointF offset; int node; };
+    const NodeSpec nodes[4] = {
+            { QPointF(0.0, -halfSpacing), 0 }, // haut
+            { QPointF(halfSpacing, 0.0),  1 }, // droite
+            { QPointF(0.0, halfSpacing),  2 }, // bas
+            { QPointF(-halfSpacing, 0.0), 3 }  // gauche
+    };
+
+    for (const NodeSpec &spec : nodes) {
+        Sphere sphere;
+        sphere.radius = radius;
+        sphere.position = center + spec.offset;
+        sphere.prevPosition = sphere.position;
+        sphere.setMass(mass);
+        sphere.color = color;
+        sphere.groupId = clusterId;
+        sphere.nodeIndex = spec.node;
+
+        insertSphere(sphere);
+    }
+
+    auto addSpring = [&](int aNode, int bNode, float stiffness = 0.92f) {
+        SpringLink spring;
+        spring.groupId = clusterId;
+        spring.aNode = aNode;
+        spring.bNode = bNode;
+
+        QPointF posA = center + nodes[aNode].offset;
+        QPointF posB = center + nodes[bNode].offset;
+        spring.restLength = QVector2D(posB - posA).length();
+        spring.stiffness = stiffness;
+
+        springLinks.append(spring);
+    };
+
+    addSpring(0, 1);
+    addSpring(1, 2);
+    addSpring(2, 3);
+    addSpring(3, 0);
+    addSpring(0, 2, 0.95f);
+    addSpring(1, 3, 0.95f);
+}
+
+Sphere *DrawArea::findSphereNode(int groupId, int nodeIndex)
+{
+    for (QVector<Sphere> &cell : grid) {
+        for (Sphere &sphere : cell) {
+            if (sphere.groupId == groupId && sphere.nodeIndex == nodeIndex) {
+                return &sphere;
+            }
+        }
+    }
+    return nullptr;
+}
+
+const Sphere *DrawArea::findSphereNode(int groupId, int nodeIndex) const
+{
+    for (const QVector<Sphere> &cell : grid) {
+        for (const Sphere &sphere : cell) {
+            if (sphere.groupId == groupId && sphere.nodeIndex == nodeIndex) {
+                return &sphere;
+            }
+        }
+    }
+    return nullptr;
+}
+
+void DrawArea::satisfySpringConstraints()
+{
+    for (const SpringLink &spring : springLinks) {
+        Sphere *a = findSphereNode(spring.groupId, spring.aNode);
+        Sphere *b = findSphereNode(spring.groupId, spring.bNode);
+        if (!a || !b)
+            continue;
+
+        QVector2D delta = QVector2D(b->position - a->position);
+        float dist = delta.length();
+        if (dist <= 1e-5f)
+            continue;
+
+        float totalInvMass = a->invMass + b->invMass;
+        if (totalInvMass <= 0.f)
+            continue;
+
+        float diff = (dist - spring.restLength) / dist;
+        QVector2D correction = delta * diff * spring.stiffness;
+
+        float shareA = a->invMass / totalInvMass;
+        float shareB = b->invMass / totalInvMass;
+
+        a->position += QPointF(correction.x() * shareA, correction.y() * shareA);
+        b->position -= QPointF(correction.x() * shareB, correction.y() * shareB);
+    }
 }

@@ -12,7 +12,7 @@
 
 
 /**
- * this class represent
+ * this class represent a physical objet
  */
 class PhysicalBody
 {
@@ -35,7 +35,7 @@ public:
         }
     }
 
-    float mass() const
+    [[nodiscard]] float mass() const
     {
         return invMass <= 0.f ? std::numeric_limits<float>::infinity() : 1.f / invMass;
     }
@@ -45,10 +45,13 @@ class Sphere : public PhysicalBody
 {
 public:
     Sphere() = default;
-    explicit Sphere(float radiusValue)
+    explicit Sphere(float radiusValue) // forbid conversion
             : radius(radiusValue) {}
 
     float radius = 30.f;
+
+    int groupId = -1;    // -1 = Independant sphere
+    int nodeIndex = -1;  // index in the square 0, 1, 2, 3
 };
 
 #endif // PHYSICALBODY_H
