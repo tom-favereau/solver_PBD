@@ -64,7 +64,12 @@ namespace
         }
     }
 
-
+    /**
+     * dispatch the thread on different computation zone
+     * @tparam Task either a function that act on Sphere or a function that act on cells
+     * @param grid
+     * @param task
+     */
     template <typename Task>
     void dispatch(Grid &grid, Task &&task)
     {
@@ -79,7 +84,7 @@ namespace
 
         const int chunkWidth = std::max(1, (cols + usableThreads - 1) / usableThreads);
 
-        QList<QFuture<void>> futures;
+        QVector<QFuture<void>> futures;
         futures.reserve(usableThreads);
 
         for (int colStart = 0; colStart < cols; colStart += chunkWidth) {
@@ -103,7 +108,7 @@ void multithreading::forEachSphere(
         return;
 
     dispatch(grid, [&](int colBegin, int colEnd) {
-        process(grid, colBegin, colEnd, task);  
+        process(grid, colBegin, colEnd, task);
     });
 }
 

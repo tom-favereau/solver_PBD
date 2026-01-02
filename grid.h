@@ -41,6 +41,7 @@ public:
 
 
     [[nodiscard]] int size()  const { return cells.size(); }
+    [[nodiscard]] bool isEmpty() const { return cells.isEmpty(); }
 
     QVector<QVector<Sphere>> cells;
     std::vector<std::unique_ptr<QMutex>> locks; // we don't use QVector because it does not support Qmutex to have copy constructor deleted
@@ -48,7 +49,7 @@ public:
     unsigned int gridCols;
     //const float targetCellSize = 200;
 
-    [[nodiscard]] bool isEmpty() const { return cells.isEmpty(); }
+
 };
 
 #endif //TD9_GRID_H
