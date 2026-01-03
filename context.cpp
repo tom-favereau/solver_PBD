@@ -49,17 +49,17 @@ void Context::step(float frameDt)
     const float dt = frameDt / static_cast<float>(subSteps);
 
     for (int stepIndex = 0; stepIndex < subSteps; ++stepIndex) {
-        solver.integrateBodies(grid_, dt);
+        solver::integrateBodies(grid_, dt);
         updateGrid();
 
         for (int iter = 0; iter < solverIterations; ++iter) {
-            solver.satisfyStaticConstraints(grid_, staticConstraints);
+            solver::satisfyStaticConstraints(grid_, staticConstraints);
             updateGrid();
 
-            solver.satisfySpringConstraints(grid_, springLinks);
+            solver::satisfySpringConstraints(grid_, springLinks);
             updateGrid();
 
-            solver.solveSphereContacts(
+            solver::solveSphereContacts(
                     grid_,
                     gridCols,
                     gridRows,
@@ -67,8 +67,8 @@ void Context::step(float frameDt)
             updateGrid();
         }
 
-        solver.updateVelocities(grid_, dt);
-        solver.applyVelocityDamping(grid_, dampingFactor);
+        solver::updateVelocities(grid_, dt);
+        solver::applyVelocityDamping(grid_, dampingFactor);
     }
 }
 

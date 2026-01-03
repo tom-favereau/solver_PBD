@@ -17,7 +17,7 @@ public:
      * @param parent Qwidget
      * @param hearts number of heart that the program is allowed to use. 0 = maximum
      */
-    explicit DrawArea(QWidget *parent = nullptr, unsigned int hearts = 1);
+    explicit DrawArea(QWidget *parent = nullptr, unsigned int hearts = 0);
 
 protected:
     /**

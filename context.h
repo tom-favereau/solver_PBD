@@ -106,7 +106,6 @@ private:
     [[nodiscard]] int cellIndexFor(const QPointF &position) const;
     [[nodiscard]] bool isValidCell(int col, int row) const;
 
-    Solver solver;
 
     Grid grid_;
     QVector<std::shared_ptr<StaticConstraint>> staticConstraints;

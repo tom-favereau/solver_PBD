@@ -21,27 +21,27 @@
 /**
  * Position based dynamics solver
  */
-class Solver
+namespace solver
 {
-public:
+
 
     /**
      * Apply the external forces and compute the new position
      * @param dt
      */
-    void integrateBodies(Grid &grid, float dt) const;
+    void integrateBodies(Grid &grid, float dt) ;
 
     /**
      * resolve static constraint with method project from static Constraint
      */
-    void satisfyStaticConstraints(Grid &grid, const QVector<std::shared_ptr<StaticConstraint>> &constraints) const;
+    void satisfyStaticConstraints(Grid &grid, const QVector<std::shared_ptr<StaticConstraint>> &constraints) ;
 
     /**
      * resolve spring constraint cluster by cluster
      * @param grid
      * @param springLinks
      */
-    void satisfySpringConstraints(Grid &grid, QVector<SpringLink> &springLinks) const;
+    void satisfySpringConstraints(Grid &grid, QVector<SpringLink> &springLinks) ;
 
     /**
     * resolve sphere contact with method resolveSpherePair
@@ -50,23 +50,22 @@ public:
     void solveSphereContacts(Grid &grid,
                              int gridCols,
                              int gridRows,
-                             const std::function<bool(int, int)> &isValidCell) const;
+                             const std::function<bool(int, int)> &isValidCell) ;
 
     /**
      * Recompute velicities accoding to position and previous position acording to position based dynamics
      * @param dt
      */
-    void updateVelocities(Grid &grid, float dt) const;
+    void updateVelocities(Grid &grid, float dt) ;
 
     /**
      * Apply damping
      * @param Dampingfactor
      */
-    void applyVelocityDamping(Grid &grid, float dampingFactor) const;
+    void applyVelocityDamping(Grid &grid, float dampingFactor) ;
 
-private:
-    static void resolveSpherePair(Sphere &a, Sphere &b);
-    static Sphere *findSphereNode(Grid &grid, int groupId, int nodeIndex);
+
+
 };
 
 

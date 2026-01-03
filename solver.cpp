@@ -7,26 +7,66 @@
 
 namespace
 {
-    //constexpr QVector2D kGravity(0.f, 1200.f);
+    constexpr QVector2D kGravity(0.f, 1200.f);
     //constexpr QVector2D kGravity(0.f, 600.f);
-    constexpr QVector2D kGravity(0.f, 400.f);
+    //constexpr QVector2D kGravity(0.f, 400.f);
+
+    void resolveSpherePair(Sphere &a, Sphere &b)
+    {
+        QVector2D delta = QVector2D(b.position - a.position);
+        float dist = delta.length();
+        float minDist = a.radius + b.radius;
+
+        if (dist >= minDist)
+            return;
+
+        if (dist < 1e-6f) {
+            delta = QVector2D(1.f, 0.f);
+            dist = 1.f;
+        }
+
+        float totalInvMass = a.invMass + b.invMass;
+        if (totalInvMass <= 0.f)
+            return;
+
+        float penetration = minDist - dist;
+        QVector2D normal = delta / dist;
+        QVector2D correction = normal * penetration;
+
+        float shareA = a.invMass / totalInvMass;
+        float shareB = b.invMass / totalInvMass;
+
+        a.position -= QPointF(correction.x() * shareA, correction.y() * shareA);
+        b.position += QPointF(correction.x() * shareB, correction.y() * shareB);
+    }
+
+    Sphere *findSphereNode(Grid &grid, int groupId, int nodeIndex)
+    {
+        for (QVector<Sphere> &cell : grid.cells) {
+            for (Sphere &sphere : cell) {
+                if (sphere.groupId == groupId && sphere.nodeIndex == nodeIndex) {
+                    return &sphere;
+                }
+            }
+        }
+        return nullptr;
+    }
 }
 
-void Solver::integrateBodies(Grid &grid, float dt) const
+void solver::integrateBodies(Grid &grid, float dt)
 {
     multithreading::forEachSphere(grid, [dt](Sphere &sphere) {
         if (sphere.invMass <= 0.f)
             return;
 
-        //sphere.velocity += kGravity * dt; // gravity does not depend on the mass
-        sphere.velocity += kGravity * sphere.mass() * dt; //gravity depend on the mass
+        sphere.velocity += kGravity * dt;
         sphere.prevPosition = sphere.position;
         sphere.position += QPointF(sphere.velocity.x() * dt, sphere.velocity.y() * dt);
     });
 }
 
-void Solver::satisfyStaticConstraints(Grid &grid,
-                                      const QVector<std::shared_ptr<StaticConstraint>> &constraints) const
+void solver::satisfyStaticConstraints(Grid &grid,
+                                      const QVector<std::shared_ptr<StaticConstraint>> &constraints)
 {
     for (const auto &constraint : constraints) {
         if (!constraint)
@@ -38,7 +78,7 @@ void Solver::satisfyStaticConstraints(Grid &grid,
     }
 }
 
-void Solver::satisfySpringConstraints(Grid &grid, QVector<SpringLink> &springLinks) const
+void solver::satisfySpringConstraints(Grid &grid, QVector<SpringLink> &springLinks)
 {
     for (const SpringLink &spring : springLinks) {
         Sphere *a = findSphereNode(grid, spring.groupId, spring.aNode);
@@ -66,8 +106,8 @@ void Solver::satisfySpringConstraints(Grid &grid, QVector<SpringLink> &springLin
     }
 }
 
-void Solver::solveSphereContacts(Grid &grid, int gridCols, int gridRows,
-                                 const std::function<bool(int, int)> &isValidCell) const
+void solver::solveSphereContacts(Grid &grid, int gridCols, int gridRows,
+                                 const std::function<bool(int, int)> &isValidCell)
 {
     if (gridCols <= 0 || gridRows <= 0 || grid.cells.isEmpty())
         return;
@@ -135,7 +175,7 @@ void Solver::solveSphereContacts(Grid &grid, int gridCols, int gridRows,
     multithreading::forEachCell(grid, cellJob);
 }
 
-void Solver::updateVelocities(Grid &grid, float dt) const
+void solver::updateVelocities(Grid &grid, float dt)
 {
     if (dt <= 0.f)
         return;
@@ -146,50 +186,10 @@ void Solver::updateVelocities(Grid &grid, float dt) const
     });
 }
 
-void Solver::applyVelocityDamping(Grid &grid, float dampingFactor) const
+void solver::applyVelocityDamping(Grid &grid, float dampingFactor)
 {
     multithreading::forEachSphere(grid, [dampingFactor](Sphere &sphere) {
         sphere.velocity *= dampingFactor;
     });
 }
 
-void Solver::resolveSpherePair(Sphere &a, Sphere &b)
-{
-    QVector2D delta = QVector2D(b.position - a.position);
-    float dist = delta.length();
-    float minDist = a.radius + b.radius;
-
-    if (dist >= minDist)
-        return;
-
-    if (dist < 1e-6f) {
-        delta = QVector2D(1.f, 0.f);
-        dist = 1.f;
-    }
-
-    float totalInvMass = a.invMass + b.invMass;
-    if (totalInvMass <= 0.f)
-        return;
-
-    float penetration = minDist - dist;
-    QVector2D normal = delta / dist;
-    QVector2D correction = normal * penetration;
-
-    float shareA = a.invMass / totalInvMass;
-    float shareB = b.invMass / totalInvMass;
-
-    a.position -= QPointF(correction.x() * shareA, correction.y() * shareA);
-    b.position += QPointF(correction.x() * shareB, correction.y() * shareB);
-}
-
-Sphere *Solver::findSphereNode(Grid &grid, int groupId, int nodeIndex)
-{
-    for (QVector<Sphere> &cell : grid.cells) {
-        for (Sphere &sphere : cell) {
-            if (sphere.groupId == groupId && sphere.nodeIndex == nodeIndex) {
-                return &sphere;
-            }
-        }
-    }
-    return nullptr;
-}
