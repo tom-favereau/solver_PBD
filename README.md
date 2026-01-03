@@ -2,7 +2,9 @@
 
 **Tom Favereau** and **Nicolas Pozo**
 
-[demo](illustration.png)
+<p align="center">
+  <img src="illustration.png" alt="Illustration" width="400">
+</p>
 
 ## Overview
 
