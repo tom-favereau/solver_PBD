@@ -25,7 +25,7 @@ set(PROJECT_SOURCES
         physicalbody.h
         multithreading.cpp
         multithreading.h
-        grid.h)
+        grid.h springlink.h solver.cpp solver.h renderer.cpp renderer.h context.cpp context.h)
 
 if(QT_VERSION_MAJOR GREATER_EQUAL 6)
     qt_add_executable(TD9

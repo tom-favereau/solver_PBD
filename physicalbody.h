@@ -35,7 +35,7 @@ public:
         }
     }
 
-    [[nodiscard]] float mass() const
+    [[nodiscard]] float mass() const //infinity in case we want to do static sphere. but now that we already have those is maybe unnecessary
     {
         return invMass <= 0.f ? std::numeric_limits<float>::infinity() : 1.f / invMass;
     }

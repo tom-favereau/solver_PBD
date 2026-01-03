@@ -5,6 +5,7 @@
 #ifndef TD9_GRID_H
 #define TD9_GRID_H
 
+#include <QMutex>
 #include "physicalbody.h"
 
 
