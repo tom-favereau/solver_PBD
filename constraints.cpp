@@ -18,7 +18,7 @@ void PlaneConstraint::project(Sphere &sphere) const
     if (sphere.invMass <= 0.f)
         return;
 
-    QVector2D center = QVector2D(sphere.position);
+    auto center = QVector2D(sphere.position);
     float signedDistance = QVector2D::dotProduct(m_normal, center) - m_distance - sphere.radius; // compute this distance between the plane and the frontier of the sphere
 
     if (signedDistance < 0.f) {
@@ -35,7 +35,7 @@ void SphereConstraint::project(Sphere &sphere) const
     if (sphere.invMass <= 0.f)
         return;
 
-    QVector2D delta = QVector2D(sphere.position - m_center);
+    auto delta = QVector2D(sphere.position - m_center);
     float dist = delta.length();
     float minDist = m_radius + sphere.radius;
 
@@ -61,7 +61,7 @@ void BowlConstraint::project(Sphere &sphere) const
     if (sphere.invMass <= 0.f || m_radius <= 0.f)
         return;
 
-    QVector2D delta = QVector2D(sphere.position - m_center);
+    auto delta = QVector2D(sphere.position - m_center);
     float dist = delta.length();
 
     float maxDist = qMax(0.f, m_radius - sphere.radius);

@@ -2,8 +2,6 @@
 
 #include <QMouseEvent>
 #include <QPainter>
-#include <QResizeEvent>
-#include <QKeyEvent>
 #include <QThreadPool>
 
 DrawArea::DrawArea(QWidget *parent, unsigned int hearts)
@@ -95,7 +93,7 @@ void DrawArea::keyReleaseEvent(QKeyEvent *event)
 void DrawArea::animate()
 {
     qint64 now = clock.nsecsElapsed();
-    float frameDt = (now - lastTick) * 1e-9f;
+    float frameDt = static_cast<float>((now - lastTick)) * 1e-9f;
     lastTick = now;
 
     if (frameDt <= 0.f)

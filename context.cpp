@@ -42,10 +42,6 @@ void Context::step(float frameDt)
     if (frameDt <= 0.f)
         return;
 
-    constexpr int subSteps          = 4;
-    constexpr int solverIterations  = 4;
-    constexpr float dampingFactor   = 1.0f;
-
     const float dt = frameDt / static_cast<float>(subSteps);
 
     for (int stepIndex = 0; stepIndex < subSteps; ++stepIndex) {
@@ -56,7 +52,7 @@ void Context::step(float frameDt)
             solver::satisfyStaticConstraints(grid_, staticConstraints);
             updateGrid();
 
-            solver::satisfySpringConstraints(grid_, springLinks);
+            solver::satisfySpringConstraints(grid_, springLinks, subSteps);
             updateGrid();
 
             solver::solveSphereContacts(
@@ -193,7 +189,7 @@ void Context::rebuildGrid(const QSize &size)
     bodies.reserve([&]() {
         int count = 0;
         for (const QVector<Sphere> &cell : grid_.cells)
-            count += cell.size();
+            count += static_cast<int>(cell.size());
         return count;
     }());
 

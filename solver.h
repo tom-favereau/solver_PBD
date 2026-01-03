@@ -41,7 +41,7 @@ namespace solver
      * @param grid
      * @param springLinks
      */
-    void satisfySpringConstraints(Grid &grid, QVector<SpringLink> &springLinks) ;
+    void satisfySpringConstraints(Grid &grid, QVector<SpringLink> &springLinks, unsigned int subSteps);
 
     /**
     * resolve sphere contact with method resolveSpherePair
@@ -66,7 +66,7 @@ namespace solver
 
 
 
-};
+}
 
 
 #endif //TD9_SOLVER_H

@@ -27,7 +27,11 @@
  */
 class Context {
 public:
-    Context() = default;
+    //Context() = default;
+
+    explicit Context(float targetCellSize = 200, int subSteps = 4, int solverIterations = 4, float dampingFactor = 0.998) :
+        targetCellSize(targetCellSize), subSteps(subSteps),
+        solverIterations(solverIterations), dampingFactor(dampingFactor) {};
 
     /**
      * initialize the grid and the static constraint acording to the initial size
@@ -43,6 +47,7 @@ public:
 
     /**
      * Solve the constraint with 4 iteration of (static -> spring -> sphere) and then update velocities
+     * IM THINKING MOVING THIS INTO SOLVER. I DONT KNOW IF IT SHOULD BE THE RESPONSABILITY OF THE CONTEXT. PLEASE REVIEW?
      * @param frameDt
      */
     void step(float frameDt);
@@ -65,7 +70,7 @@ public:
      */
     void createSpringCluster(const QPointF &center);
 
-    [[nodiscard]] bool isCenterCellEmpty() const;
+    [[maybe_unused]] [[nodiscard]] bool isCenterCellEmpty() const;
     [[nodiscard]] QPointF sceneCenter() const;
     [[nodiscard]] QSize sceneSize() const { return sceneSize_; }
 
@@ -116,7 +121,11 @@ private:
     int gridRows      = 1;
     float cellWidth   = 1.f;
     float cellHeight  = 1.f;
+
     float targetCellSize = 200.f;
+    int subSteps          = 4;
+    int solverIterations  = 4;
+    float dampingFactor   = 0.998f;
 
     QSize sceneSize_ {800, 600};
 };

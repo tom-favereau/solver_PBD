@@ -58,9 +58,7 @@ namespace
         colEnd   = std::clamp(colEnd,   colBegin, static_cast<int>(grid.gridCols));
 
         for (unsigned int row = 0; row < grid.gridRows; ++row) {
-            for (int col = colBegin; col < colEnd; ++col) {
-                task(row, static_cast<unsigned int>(col));
-            }
+            for (unsigned int col = colBegin; col < colEnd; ++col) task(row, col);
         }
     }
 

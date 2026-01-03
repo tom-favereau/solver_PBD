@@ -35,7 +35,7 @@ namespace multithreading
      * Return the number of thread allowed
      */
     int maxThreadAllowed();
-};
+}
 
 
 #endif //TD9_MULTITHREADING_H

@@ -8,12 +8,13 @@
 namespace
 {
     constexpr QVector2D kGravity(0.f, 1200.f);
+    //constexpr unsigned int kSubsteps = 4;
     //constexpr QVector2D kGravity(0.f, 600.f);
     //constexpr QVector2D kGravity(0.f, 400.f);
 
     void resolveSpherePair(Sphere &a, Sphere &b)
     {
-        QVector2D delta = QVector2D(b.position - a.position);
+        auto delta = QVector2D(b.position - a.position);
         float dist = delta.length();
         float minDist = a.radius + b.radius;
 
@@ -65,8 +66,7 @@ void solver::integrateBodies(Grid &grid, float dt)
     });
 }
 
-void solver::satisfyStaticConstraints(Grid &grid,
-                                      const QVector<std::shared_ptr<StaticConstraint>> &constraints)
+void solver::satisfyStaticConstraints(Grid &grid, const QVector<std::shared_ptr<StaticConstraint>> &constraints)
 {
     for (const auto &constraint : constraints) {
         if (!constraint)
@@ -78,7 +78,7 @@ void solver::satisfyStaticConstraints(Grid &grid,
     }
 }
 
-void solver::satisfySpringConstraints(Grid &grid, QVector<SpringLink> &springLinks)
+void solver::satisfySpringConstraints(Grid &grid, QVector<SpringLink> &springLinks, unsigned int subSteps)
 {
     for (const SpringLink &spring : springLinks) {
         Sphere *a = findSphereNode(grid, spring.groupId, spring.aNode);
@@ -86,7 +86,7 @@ void solver::satisfySpringConstraints(Grid &grid, QVector<SpringLink> &springLin
         if (!a || !b)
             continue;
 
-        QVector2D delta = QVector2D(b->position - a->position);
+        auto delta = QVector2D(b->position - a->position);
         float dist = delta.length();
         if (dist <= 1e-5f)
             continue;
@@ -95,8 +95,9 @@ void solver::satisfySpringConstraints(Grid &grid, QVector<SpringLink> &springLin
         if (totalInvMass <= 0.f)
             continue;
 
-        float diff = (dist - spring.restLength) / dist;
-        QVector2D correction = delta * diff * spring.stiffness;
+        const float C = (dist - spring.restLength) ;
+        const float beta = 1.0f - std::pow(1.0f - spring.stiffness, 1.0f / static_cast<float>(subSteps));
+        QVector2D correction =  C * beta * (delta/dist);
 
         float shareA = a->invMass / totalInvMass;
         float shareB = b->invMass / totalInvMass;
@@ -181,7 +182,7 @@ void solver::updateVelocities(Grid &grid, float dt)
         return;
 
     multithreading::forEachSphere(grid, [dt](Sphere &sphere) {
-        QVector2D delta = QVector2D(sphere.position - sphere.prevPosition);
+        auto delta = QVector2D(sphere.position - sphere.prevPosition);
         sphere.velocity = delta / dt;
     });
 }

@@ -6,6 +6,7 @@
 #define TD9_GRID_H
 
 #include <QMutex>
+#include <memory>
 #include "physicalbody.h"
 
 
@@ -36,12 +37,12 @@ public:
         locks.resize(total);
         for (int i = 0; i < total; ++i) {
             if (!locks[i])
-                locks[i].reset(new QMutex);
+                locks[i] = std::make_unique<QMutex>();
         }
     }
 
 
-    [[nodiscard]] int size()  const { return cells.size(); }
+    [[nodiscard]] int size()  const { return static_cast<int>(cells.size()); }
     [[nodiscard]] bool isEmpty() const { return cells.isEmpty(); }
 
     QVector<QVector<Sphere>> cells;
