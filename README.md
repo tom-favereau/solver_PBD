@@ -42,4 +42,7 @@ git clone git@github.com:tom-favereau/solver_PBD.git
 cd solver_PBD
 cmake -S . -B build
 cmake --build build --config Release
+# Linux 
 ./build/SOLVER
+# Max 
+open ./build/SOLVEL.app
