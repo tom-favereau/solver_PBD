@@ -44,5 +44,5 @@ cmake -S . -B build
 cmake --build build --config Release
 # Linux 
 ./build/SOLVER
-# Max 
+# MacOS
 open ./build/SOLVEL.app
