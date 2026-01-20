@@ -176,6 +176,7 @@ void solver::solveSphereContacts(Grid &grid, int gridCols, int gridRows,
     multithreading::forEachCell(grid, cellJob);
 }
 
+
 void solver::updateVelocities(Grid &grid, float dt)
 {
     if (dt <= 0.f)

@@ -2,8 +2,8 @@
 // Created by Tom Favereau on 03/01/2026.
 //
 
-#ifndef TD9_SPRINGLINK_H
-#define TD9_SPRINGLINK_H
+#ifndef SOLVER_SPRINGLINK_H
+#define SOLVER_SPRINGLINK_H
 
 struct SpringLink
 {
@@ -14,4 +14,4 @@ struct SpringLink
     float stiffness  = 0.9f;
 };
 
-#endif //TD9_SPRINGLINK_H
+#endif //SOLVER_SPRINGLINK_H

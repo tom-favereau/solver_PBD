@@ -2,8 +2,8 @@
 // Created by Tom Favereau on 31/12/2025.
 //
 
-#ifndef TD9_MULTITHREADING_H
-#define TD9_MULTITHREADING_H
+#ifndef SOLVER_MULTITHREADING_H
+#define SOLVER_MULTITHREADING_H
 
 #include <functional>
 #include <QVector>
@@ -38,4 +38,4 @@ namespace multithreading
 }
 
 
-#endif //TD9_MULTITHREADING_H
+#endif //SOLVER_MULTITHREADING_H

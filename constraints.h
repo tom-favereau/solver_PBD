@@ -1,5 +1,5 @@
-#ifndef CONSTRAINTS_H
-#define CONSTRAINTS_H
+#ifndef SOLVER_CONSTRAINTS_H
+#define SOLVER_CONSTRAINTS_H
 
 #include "physicalbody.h"
 #include <QVector2D>
@@ -89,4 +89,4 @@ private:
     float m_radius = 100.f;
 };
 
-#endif // CONSTRAINTS_H
+#endif // SOLVER_CONSTRAINTS_H

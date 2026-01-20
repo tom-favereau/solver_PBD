@@ -2,8 +2,8 @@
 // Created by Tom Favereau on 28/12/2025.
 //
 
-#ifndef PHYSICALBODY_H
-#define PHYSICALBODY_H
+#ifndef SOLVER_PHYSICALBODY_H
+#define SOLVER_PHYSICALBODY_H
 
 #include <QPointF>
 #include <QVector2D>
@@ -54,4 +54,4 @@ public:
     int nodeIndex = -1;  // index in the square 0, 1, 2, 3
 };
 
-#endif // PHYSICALBODY_H
+#endif // SOLVER_PHYSICALBODY_H

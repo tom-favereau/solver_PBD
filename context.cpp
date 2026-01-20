@@ -153,6 +153,84 @@ void Context::createSpringCluster(const QPointF &center)
     addSpring(1, 3, 0.95f);
 }
 
+
+void Context::createSoftBody(const QPointF &center,
+                             int pairCount  ,
+                             float radius  ,
+                             float spacing  ,
+                             float mass   ,
+                             float stiffness )
+{
+    if (pairCount < 3)
+        pairCount = 3;
+
+    const int clusterId = nextGroupId++;
+
+    struct NodeSpec {
+        QPointF offset;
+        int node = 0;
+    };
+
+    std::vector<NodeSpec> nodes;
+    nodes.reserve(pairCount * 2);
+
+    const float halfWidth = 0.5f * spacing * static_cast<float>(pairCount - 1);
+    const float halfHeight = spacing * 0.5f;
+
+    for (int i = 0; i < pairCount; ++i) {
+        const float x = static_cast<float>(i) * spacing - halfWidth;
+        nodes.push_back({ QPointF(x, -halfHeight), static_cast<int>(nodes.size()) });
+    }
+
+    for (int i = 0; i < pairCount; ++i) {
+        const float x = static_cast<float>(i) * spacing - halfWidth;
+        nodes.push_back({ QPointF(x, halfHeight), static_cast<int>(nodes.size()) });
+    }
+
+    for (const NodeSpec &spec : nodes) {
+        Sphere s;
+        s.radius        = radius;
+        s.position      = center + spec.offset;
+        s.prevPosition  = s.position;
+        s.setMass(mass);
+        s.groupId       = clusterId;
+        s.nodeIndex     = spec.node;
+        s.color         = QColor(240, 140, 70);
+        insertSphere(s);
+    }
+
+    auto addSpring = [&](int nodeA, int nodeB) {
+        SpringLink spring;
+        spring.groupId = clusterId;
+        spring.aNode   = nodeA;
+        spring.bNode   = nodeB;
+
+        const QPointF posA = center + nodes[nodeA].offset;
+        const QPointF posB = center + nodes[nodeB].offset;
+        spring.restLength  = QVector2D(posB - posA).length();
+        spring.stiffness   = stiffness;
+
+        springLinks.append(spring);
+    };
+
+    const int topBase    = 0;
+    const int bottomBase = pairCount;
+
+    for (int i = 0; i < pairCount; ++i) {
+        const int next   = (i + 1) % pairCount;
+        const int ai     = topBase + i;
+        const int bi     = bottomBase + i;
+        const int anext  = topBase + next;
+        const int bnext  = bottomBase + next;
+
+        addSpring(ai, bi);
+        addSpring(ai, anext);
+        addSpring(bi, bnext);
+        addSpring(ai, bnext);
+        addSpring(bi, anext);
+    }
+}
+
 bool Context::isCenterCellEmpty() const
 {
     if (grid_.isEmpty())

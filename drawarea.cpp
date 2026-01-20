@@ -3,6 +3,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QThreadPool>
+#include <iostream>
 
 DrawArea::DrawArea(QWidget *parent, unsigned int hearts)
         : QWidget(parent)
@@ -74,17 +75,31 @@ void DrawArea::keyPressEvent(QKeyEvent *event)
         return;
     }
 
+    if (event->key() == Qt::Key_S){
+        context.createSoftBody(context.sceneCenter());
+        event->accept();
+        update();
+        return;
+    }
+
+    if (event->key() == Qt::Key_N){
+        std::cout << nb_particle << std::endl;
+        event->accept();
+        update();
+        return;
+    }
+
     QWidget::keyPressEvent(event);
 }
 
 void DrawArea::keyReleaseEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_E && !event->isAutoRepeat()) {
-        //if (isEmitting) {
-        //    emissionTimer.stop();
-        //    isEmitting = false;
-        //}
-        //event->accept();
+        if (isEmitting) {
+            emissionTimer.stop();
+            isEmitting = false;
+        }
+        event->accept();
         return;
     }
     QWidget::keyReleaseEvent(event);
@@ -107,6 +122,7 @@ void DrawArea::animate()
 
 void DrawArea::emitCenterSphere()
 {
+    nb_particle++;
     const float t = static_cast<float>(clock.nsecsElapsed()) * 1e-9f;
     context.emitCenterSphere(t);
     update();

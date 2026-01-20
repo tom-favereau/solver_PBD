@@ -2,8 +2,8 @@
 // Created by Tom Favereau on 03/01/2026.
 //
 
-#ifndef TD9_CONTEXT_H
-#define TD9_CONTEXT_H
+#ifndef SOLVER_CONTEXT_H
+#define SOLVER_CONTEXT_H
 
 
 #include <QVector>
@@ -70,6 +70,13 @@ public:
      */
     void createSpringCluster(const QPointF &center);
 
+    void createSoftBody(const QPointF &center,
+                                 int pairCount  = 15 ,
+                                 float radius  = 5.f ,
+                                 float spacing  = 25.f ,
+                                 float mass  = 1.5f ,
+                                 float stiffness  = 0.3f);
+
     [[maybe_unused]] [[nodiscard]] bool isCenterCellEmpty() const;
     [[nodiscard]] QPointF sceneCenter() const;
     [[nodiscard]] QSize sceneSize() const { return sceneSize_; }
@@ -131,4 +138,4 @@ private:
 };
 
 
-#endif //TD9_CONTEXT_H
+#endif //SOLVER_CONTEXT_H

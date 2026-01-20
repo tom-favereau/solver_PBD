@@ -2,8 +2,8 @@
 // Created by Tom Favereau on 03/01/2026.
 //
 
-#ifndef TD9_SOLVER_H
-#define TD9_SOLVER_H
+#ifndef SOLVER_SOLVER_H
+#define SOLVER_SOLVER_H
 
 #include "grid.h"
 #include "physicalbody.h"
@@ -69,4 +69,4 @@ namespace solver
 }
 
 
-#endif //TD9_SOLVER_H
+#endif //SOLVER_SOLVER_H

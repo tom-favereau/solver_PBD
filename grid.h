@@ -2,8 +2,8 @@
 // Created by Tom Favereau on 02/01/2026.
 //
 
-#ifndef TD9_GRID_H
-#define TD9_GRID_H
+#ifndef SOLVER_GRID_H
+#define SOLVER_GRID_H
 
 #include <QMutex>
 #include <memory>
@@ -54,4 +54,4 @@ public:
 
 };
 
-#endif //TD9_GRID_H
+#endif //SOLVER_GRID_H

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(TD9 VERSION 0.1 LANGUAGES CXX)
+project(SOLVER VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -28,19 +28,19 @@ set(PROJECT_SOURCES
         grid.h springlink.h solver.cpp solver.h renderer.cpp renderer.h context.cpp context.h)
 
 if(QT_VERSION_MAJOR GREATER_EQUAL 6)
-    qt_add_executable(TD9
+    qt_add_executable(SOLVER
             MANUAL_FINALIZATION
             ${PROJECT_SOURCES}
             )
 else()
     if(ANDROID)
-        add_library(TD9 SHARED ${PROJECT_SOURCES})
+        add_library(SOLVER SHARED ${PROJECT_SOURCES})
     else()
-        add_executable(TD9 ${PROJECT_SOURCES})
+        add_executable(SOLVER ${PROJECT_SOURCES})
     endif()
 endif()
 
-target_link_libraries(TD9
+target_link_libraries(SOLVER
         PRIVATE
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Concurrent
@@ -49,10 +49,10 @@ target_link_libraries(TD9
 
 # Identifiant bundle (optionnel selon version de Qt)
 if((QT_VERSION VERSION_LESS 6.1.0) AND APPLE)
-    set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.TD9)
+    set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.SOLVER)
 endif()
 
-set_target_properties(TD9 PROPERTIES
+set_target_properties(SOLVER PROPERTIES
         ${BUNDLE_ID_OPTION}
         MACOSX_BUNDLE TRUE
         WIN32_EXECUTABLE TRUE
@@ -62,12 +62,12 @@ set_target_properties(TD9 PROPERTIES
         )
 
 include(GNUInstallDirs)
-install(TARGETS TD9
+install(TARGETS SOLVER
         BUNDLE DESTINATION .
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(TD9)
+    qt_finalize_executable(SOLVER)
 endif()

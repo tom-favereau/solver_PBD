@@ -13,10 +13,20 @@ PBD iteratively projects particle positions to satisfy geometric constraints and
 
 Our implementation uses:
 
-- Qt for the rendering/UI layer.
-- A grid with mutex locking for parallel contact resolution using QtConcurrent.
-- Static constraints (planes, spheres, bowls) and spring clusters for compound objects.
-- UI interactions : particle spawning, emitters, cluster creation.
+- Qt for the rendering/UI layer
+- Static constraints (planes, spheres, bowls) and spring clusters for compound objects
+- UI interactions : particle spawning, emitters, cluster creation
+
+### What I'm proud of
+
+I optimized the simulation using a grid to resolve constraints and parallelization with QtConcurrent.
+
+## Controls
+
+- Hold **E** to spawn a small sphere at the center
+- Press **C** to spawn a square cluster at the center
+- Press **S** to spawn a soft body at the center
+- Click the mouse to spawn a sphere at the mouse position
 
 
 ## Build & Run
