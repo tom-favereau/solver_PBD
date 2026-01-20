@@ -42,7 +42,4 @@ git clone git@github.com:tom-favereau/solver_PBD.git
 cd solver_PBD
 cmake -S . -B build
 cmake --build build --config Release
-# On Linux/macOS:
-./build/bin/td9_pbd
-# On Windows (PowerShell):
-...?
+./build/SOLVER
