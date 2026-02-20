@@ -1,6 +1,6 @@
 # Position-Based Dynamics 2D Solver
 
-**Tom Favereau** and **Nicolas Pozo**
+**Tom Favereau**
 
 <p align="center">
   <img src="illustration.png" alt="Illustration" width="400">
